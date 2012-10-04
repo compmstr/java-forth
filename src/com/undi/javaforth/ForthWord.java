@@ -6,6 +6,10 @@ public class ForthWord{
     };
     private String name;
     private type type;
+    /**
+     * Could be an integer, double, character, or a list of words
+     */
+    Object data;
 
     public String getName(){
 	return this.name;
