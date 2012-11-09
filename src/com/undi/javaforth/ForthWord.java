@@ -12,6 +12,12 @@ public class ForthWord implements ForthRunnable{
     public String getName(){
 				return this.name;
     }
+		public ForthWord getPrev(){
+				return this.prev;
+		}
+		public ForthWord setPrev(ForthWord word){
+				this.prev = word;
+		}
 		public ForthRunnable.result run(){
 				return this.codeword[0].run();
 		}
