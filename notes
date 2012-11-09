@@ -1,0 +1,7 @@
+xt -> pointer to a Runnable
+ForthWord is runnable, native code is just a regular Runnable
+
+
+Need to figure out a way to do jumps...
+Branch works on offsets...
+  Do branch based on values, the ForthRunnable to jump to

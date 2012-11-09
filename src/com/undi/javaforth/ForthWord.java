@@ -1,20 +1,18 @@
 package com.undi.javaforth;
 
-public class ForthWord{
-    public static enum type {
-	INTEGER, DOUBLE, CHARACTER, CODE
-    };
+public class ForthWord implements ForthRunnable{
+		private ForthWord prev;
     private String name;
-    private type type;
-    /**
-     * Could be an integer, double, character, or a list of words
-     */
-    Object data;
+    private ForthRunnable[] codeword;
 
+		private ForthWord(){
+		}
+		public ForthWord(String name, ForthRunnable[] code){
+		}
     public String getName(){
-	return this.name;
+				return this.name;
     }
-    public type getType(){
-	return this.type;
-    }
+		public ForthRunnable.result run(){
+				return this.codeword[0].run();
+		}
 }
