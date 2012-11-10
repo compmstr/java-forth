@@ -1,17 +1,24 @@
 package com.undi.javaforth;
+import java.util.Stack;
 
 public class Forth{
     private final int stackSize = 2048;
 		private static Forth curInstance = null;
 
-    private int[] dataStack;
-    private ForthRunnable[] returnStack;
-    private float[] floatStack;
+    private Stack<Integer> dataStack;
+    private Stack<ForthExecutable> returnStack;
 		private ForthWord dictionary = null;
 		private ForthWord newWord = null;
 
     public void init(){
-				this.dataStack = new int[stackSize];
+				addWord(new ForthPrimitive("*", false, new ForthExecutable(){
+								public int execute(Stack datStack, Stack retStack){
+										if(datStack.size() < 2){
+												throw new StackUnderflowException();
+										}
+										return 1;
+								}
+						}));
     }
 
 		public ForthWord findWord(String str){
