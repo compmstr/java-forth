@@ -5,3 +5,11 @@ ForthWord is runnable, native code is just a regular Runnable
 Need to figure out a way to do jumps...
 Branch works on offsets...
   Do branch based on values, the ForthRunnable to jump to
+
+Have entire dictionary as an array of ForthExecutables.
+	That way the return stack can just be ints, and you can do relative addressing
+	Normally, a literal is just pushed onto the stack, and LIT/LITERAL reads item following it, and skips it on
+		instruction pointer...
+	I could:
+		- Store the number inside the LIT word, execute pushes number onto stack
+		- Have a subclass for literals that LIT looks for, and returns a number
