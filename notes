@@ -13,3 +13,15 @@ Have entire dictionary as an array of ForthExecutables.
 	I could:
 		- Store the number inside the LIT word, execute pushes number onto stack
 		- Have a subclass for literals that LIT looks for, and returns a number
+
+Instruction pointer -> indexes in dictionary array
+Dictionary array -> ints, indexes in Execution token array / literal values
+Execution token array -> ForthExecutables
+
+Word results:
+  NEXT -> go to next codeword in word (1)
+  EXIT -> leave current word (0)
+  0BRANCH (n)
+  BRANCH -> add/dec number from current spot in codewords (n)
+Primitives run java code
+Composites run a list of words
