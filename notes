@@ -1,27 +1,36 @@
-xt -> pointer to a Runnable
-ForthWord is runnable, native code is just a regular Runnable
-
-
-Need to figure out a way to do jumps...
-Branch works on offsets...
-  Do branch based on values, the ForthRunnable to jump to
-
-Have entire dictionary as an array of ForthExecutables.
-	That way the return stack can just be ints, and you can do relative addressing
-	Normally, a literal is just pushed onto the stack, and LIT/LITERAL reads item following it, and skips it on
-		instruction pointer...
-	I could:
-		- Store the number inside the LIT word, execute pushes number onto stack
-		- Have a subclass for literals that LIT looks for, and returns a number
-
 Instruction pointer -> indexes in dictionary array
 Dictionary array -> ints, indexes in Execution token array / literal values
 Execution token array -> ForthExecutables
 
-Word results:
-  NEXT -> go to next codeword in word (1)
-  EXIT -> leave current word (0)
-  0BRANCH (n)
-  BRANCH -> add/dec number from current spot in codewords (n)
-Primitives run java code
-Composites run a list of words
+ForthExecutable
+  //Storage for native functions
+  Execute(ForthInterp)
+ForthInterp - singleton
+  Dictionary ByteBuffer
+    Entries:
+      Prev(int) -> index in dictionary of prev entry
+      flags/len:
+        2 bits:
+          immed -- immediate word [& 0x80]
+          hidden -- hidden (not-findable) word [& 0x40]
+          primitive -- built-in word? [& 0x20]
+        5 bits name length (up to 31 chars)
+      name - stored as ascii
+      definition:
+        If primitive, pos in primitive XT array
+        Else list of XTs in dictionary (usually starting with docol)
+    Can use:
+      get[|Short|Int](index)
+      put[|Short|Int](index, val)
+  Data Stack
+  Return Stack
+  nextInstruction
+  curInstruction
+  DOCOL() -> pushes nextInstruction onto return stack,
+    sets nextInstruction to first word in it's list
+  NEXT() -> increment nextInstruction,
+    run next instruction
+  EXIT() -> pop return stack into nextInstruction
+  BRANCH(n) -> add n to nextInstruction, run next instruction
+  0BRANCH(n) -> do same as BRANCH, but only if TOS == 0
+  HERE() -> Pushes end of last dictionary entry to data stack
