@@ -156,6 +156,10 @@ public class ForthDictionary{
 				}
 		}
 
+		public void compileWord(int word, Forth env){
+				compileInt(word);
+		}
+
 		//does a CREATE onto the end of the dictionary
 		public void doCreate(String name){
 				align();
@@ -195,6 +199,32 @@ public class ForthDictionary{
 										env.pushDataStack(dict.getInt(env.getInstructionPointer()));
 										//Move instruction pointer past next item
 										env.incInstructionPointer();
+								}
+						});
+				addPrimitive("create", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										doCreate(env.getNextWord());
+								}
+						});
+				addPrimitive(",", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										compileInt(env.popDataStack());
+								}
+						});
+				/**
+					 Turns off compilation mode
+				**/
+				addPrimitive("[", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										env.setState(Forth.STATE_INTERP);
+								}
+						});
+				/**
+					 Turns on compilation mode
+				**/
+				addPrimitive("]", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										env.setState(Forth.STATE_COMPILE);
 								}
 						});
 

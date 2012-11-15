@@ -11,8 +11,8 @@ public class Forth{
 		private int instructionPointer = 0;
 		private Stack<Integer> returnStack = new Stack<Integer>();
 		private Stack<Integer> dataStack = new Stack<Integer>();
-		public final int STATE_INTERP = 0;
-		public final int STATE_COMPILE = 0;
+		public static final int STATE_INTERP = 0;
+		public static final int STATE_COMPILE = 1;
 		private int state;
 		private ForthInputBuffer in = new ForthInputBuffer();
 
@@ -21,6 +21,17 @@ public class Forth{
 				//System.out.println(dict.find("DOCOL"));
 				//System.out.println(dict.find("bye"));
     }
+
+		public String getNextWord(){
+				return in.getNextWord();
+		}
+
+		public void setState(int val){
+				state = val;
+		}
+		public int getState(){
+				return state;
+		}
 
 		/**
 			 Instruction pointer stuff
@@ -89,12 +100,24 @@ public class Forth{
 						while((curWord = in.getNextWord()) != null){
 								int word = dict.find(curWord);
 								if(word != -1){
-										dict.runWord(word, this);
+										if(state == STATE_INTERP){
+												dict.runWord(word, this);
+										}else{
+												if(dict.isWordImmediate(word)){
+														dict.runWord(word, this);
+												}else{
+														dict.compileWord(word, this);
+												}
+										}
 								}else{
 										try{
 												//Parse as an int and add to stack
 												int num = Integer.parseInt(curWord);
-												pushDataStack(num);
+												if(state == STATE_INTERP){
+														pushDataStack(num);
+												}else{
+														dict.compileInt(num);
+												}
 										}catch(NumberFormatException ex){
 												throw new ForthException("Word not found: " + curWord);
 										}
