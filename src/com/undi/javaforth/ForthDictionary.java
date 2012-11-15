@@ -47,10 +47,13 @@ public class ForthDictionary{
 				return -1;
 		}
 		/**
-			 Returns the first code word for the passed in word index
+			 Returns the position of the first code word for the passed in word index
 		**/
 		public int getCodeWord(int word){
-				return -1;
+				int loc = getWordNameFlagLoc(word);
+				int count = ForthUtils.bufferGetUByte(dict, loc) & 0x1f;
+				loc += count + 1;
+				return loc + ForthUtils.alignDWord(loc);
 		}
 
 		public int getPrevWord(int word){
@@ -63,10 +66,10 @@ public class ForthDictionary{
 			 Gets (and converts to unsigned byte range) Flag/Wordlen byte
 		**/
 		public short getWordNameFlag(int loc){
-				return (short)(dict.getShort(loc) & 0xFF);
+				return (short)(dict.getShort(getWordNameFlagLoc(loc) & 0xFF));
 		}
 		public boolean isWordImmediate(int word){
-				int nameFlag = getWordNameFlagLoc(word);
+				int nameFlag = getWordNameFlag(word);
 				if((nameFlag & WORD_FLAG_IMMEDIATE) == 0){
 						return false;
 				}else{
@@ -74,7 +77,7 @@ public class ForthDictionary{
 				}
 		}
 		public boolean isWordHidden(int word){
-				int nameFlag = getWordNameFlagLoc(word);
+				int nameFlag = getWordNameFlag(word);
 				if((nameFlag & WORD_FLAG_HIDDEN) == 0){
 						return false;
 				}else{
@@ -82,7 +85,7 @@ public class ForthDictionary{
 				}
 		}
 		public boolean isWordPrimitive(int word){
-				int nameFlag = getWordNameFlagLoc(word);
+				int nameFlag = getWordNameFlag(word);
 				if((nameFlag & WORD_FLAG_PRIMITIVE) == 0){
 						return false;
 				}else{
@@ -115,6 +118,20 @@ public class ForthDictionary{
 				primitives.add(code);
 				curPos += 4;
 		}
+
+		/**
+			 pass in a location in the dictionary, return the ForthExecutable primitive
+		**/
+		public void runPrimitive(int loc, Forth env){
+				primitives.get(loc).Execute(env);
+		}
+
+		public void runWord(int word, Forth env){
+				if(isWordPrimitive(word)){
+						runPrimitive(dict.getInt(getCodeWord(word)), env);
+				}else{
+				}
+		}
 		
 		//Bootstraps dictionary with primitives
 		public void init(){
@@ -127,8 +144,6 @@ public class ForthDictionary{
 										env.setInstructionPointer(env.incExecPointer());
 								}
 						});
-				System.out.format("lastWord: %d\n", lastWord);
-				System.out.format("prevWord: %d\n", getPrevWord(lastWord));
 				addPrimitive("*", false, new ForthExecutable(){
 								public void Execute(Forth env){
 										System.out.println("*");
@@ -136,8 +151,6 @@ public class ForthDictionary{
 																			env.popDataStack());
 								}
 						});
-				System.out.format("lastWord: %d\n", lastWord);
-				System.out.format("prevWord: %d\n", getPrevWord(lastWord));
 				addPrimitive("+", false, new ForthExecutable(){
 								public void Execute(Forth env){
 										System.out.println("+");
@@ -145,8 +158,17 @@ public class ForthDictionary{
 																			env.popDataStack());
 								}
 						});
-
-				System.out.format("lastWord: %d\n", lastWord);
-				System.out.format("prevWord: %d\n", getPrevWord(lastWord));
+				addPrimitive(".", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										System.out.println(".");
+										System.out.format("%d ", env.popDataStack());
+								}
+						});
+				addPrimitive("bye", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										System.out.println("Bye!");
+										System.exit(0);
+								}
+						});
 		}
 }

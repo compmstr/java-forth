@@ -7,7 +7,7 @@ public class ForthUtils{
 			 to bytes byte boundries
 		**/
 		public static int alignBytes(int bytes, int val){
-				System.out.format("AlignBytes: %d, %d --> %d\n", bytes, val, ((bytes - (val % bytes)) % (bytes - 1)));
+				//System.out.format("AlignBytes: %d, %d --> %d\n", bytes, val, ((bytes - (val % bytes)) % (bytes - 1)));
 				return ((bytes - (val % bytes)) % bytes);
 		}
 		public static int alignDWord(int val){
@@ -27,7 +27,7 @@ public class ForthUtils{
 		}
 
 		public static short bufferGetUByte(ByteBuffer buf, int loc){
-				return (short)((buf.getShort(loc) >> 8) * 0xFF);
+				return (short)((buf.getShort(loc) >> 8) & 0xFF);
 		}
 		public static void bufferPutUByte(ByteBuffer buf, int loc, short val){
 				buf.put(loc, (byte) val);

@@ -16,7 +16,8 @@ public class Forth{
 
     public void init(){
 				dict.init();
-				System.out.println(dict.find("DOCOL"));
+				//System.out.println(dict.find("DOCOL"));
+				//System.out.println(dict.find("bye"));
     }
 
 		/**
@@ -71,6 +72,26 @@ public class Forth{
 				return this.dataStack.get(idx);
 		}
 
+		public void run(){
+				ForthInputBuffer in = new ForthInputBuffer();
+				while(true){
+						in.readLine();
+						String curWord = null;
+						while((curWord = in.getNextWord()) != null){
+								int word = dict.find(curWord);
+								if(word != -1){
+										dict.runWord(word, this);
+								}else{
+										//Parse as an int and add to stack
+										int num = Integer.parseInt(curWord);
+										pushDataStack(num);
+								}
+								System.out.format("Word: %s -- Found: %d\n", curWord, dict.find(curWord));
+						}
+						System.out.println("ok");
+				}
+		}
+
 		/**
 			 Singleton stuff
 		**/
@@ -85,5 +106,6 @@ public class Forth{
     public static void main(String[] args){
 				Forth forth = Forth.getInstance();
 				forth.init();
+				forth.run();
     }
 }
