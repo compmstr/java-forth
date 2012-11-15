@@ -34,3 +34,8 @@ ForthInterp - singleton
   BRANCH(n) -> add n to nextInstruction, run next instruction
   0BRANCH(n) -> do same as BRANCH, but only if TOS == 0
   HERE() -> Pushes end of last dictionary entry to data stack
+
+Constants
+  DOCOL LIT <val> EXIT
+Variables:
+  <var> <header> DOCOL LIT <loc of <var>> EXIT

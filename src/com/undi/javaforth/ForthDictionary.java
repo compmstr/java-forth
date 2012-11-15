@@ -11,10 +11,11 @@ public class ForthDictionary{
 		private final short WORD_FLAG_HIDDEN = 0x40;
 		private final short WORD_FLAG_PRIMITIVE = 0x20;
 		private Vector<ForthExecutable> primitives = new Vector<ForthExecutable>();
+		private int lastRunWord = 0;
 
 		//Index of the start of the last CREATEd word
 		private int lastWord = -1;
-		//Index where the next insert will go
+		//Index where the next insert will go (HERE)
 		private int curPos = 0;
 
 		/**
@@ -42,7 +43,8 @@ public class ForthDictionary{
 						if(curNameLen == str.length()){
 							curName = getWordNameFlagLoc(cur);
 							curName += 1;
-							if(ForthUtils.stringEqualsByteBuffer(dict, curName, str)){
+							if(ForthUtils.stringEqualsByteBuffer(dict, curName, str)
+								 && (!isWordHidden(cur))){
 									return cur;
 							}
 						}
@@ -110,23 +112,26 @@ public class ForthDictionary{
 				align();
 		}
 		private void addPrimitive(String name, boolean immediate, ForthExecutable code){
-				align();
-				//Store prev pointer
-				dict.putInt(curPos, lastWord);
-				//Update lastWord
-				lastWord = curPos;
-				curPos += 4;
-				//Store nameLen/flags
-				short nameLenFlags = (short)(WORD_FLAG_PRIMITIVE | (short)(immediate ? WORD_FLAG_IMMEDIATE : 0));
-				nameLenFlags |= name.length();
-				ForthUtils.bufferPutUByte(dict, curPos, nameLenFlags);
-				curPos++;
-				//Store name
-				addString(name);
+				doCreate(name);
+				//Update the word flags
+				short flags = (short)(WORD_FLAG_PRIMITIVE | (short)(immediate ? WORD_FLAG_IMMEDIATE : 0));
+				setWordFlags(lastWord, flags);
+				unsetWordFlags(lastWord, WORD_FLAG_HIDDEN);
 				//Store ForthExecutable
 				dict.putInt(curPos, primitives.size());
 				primitives.add(code);
 				curPos += 4;
+		}
+
+		private void setWordFlags(int word, short flags){
+				short lenFlags = getWordNameFlag(word);
+				lenFlags |= flags;
+				ForthUtils.bufferPutUByte(dict, getWordNameFlagLoc(word), lenFlags);
+		}
+		private void unsetWordFlags(int word, short flags){
+				short lenFlags = getWordNameFlag(word);
+				lenFlags &= ~flags;
+				ForthUtils.bufferPutUByte(dict, getWordNameFlagLoc(word), lenFlags);
 		}
 
 		/**
@@ -134,13 +139,38 @@ public class ForthDictionary{
 		**/
 		public void runPrimitive(int loc, Forth env){
 				primitives.get(loc).Execute(env);
+				env.doNEXT();
 		}
 
 		public void runWord(int word, Forth env){
+				lastRunWord = word;
 				if(isWordPrimitive(word)){
 						runPrimitive(dict.getInt(getCodeWord(word)), env);
 				}else{
+						//Run a composite word
+						//Since the first word of a composite word is docol,
+						//  the stack will have stuff in it until the EXIT
+						do{
+
+						}while(!env.isReturnStackEmpty());
 				}
+		}
+
+		//does a CREATE onto the end of the dictionary
+		public void doCreate(String name){
+				align();
+				//Store prev pointer
+				dict.putInt(curPos, lastWord);
+				//Update lastWord
+				lastWord = curPos;
+				curPos += 4;
+				//Store nameLen/flags
+				short nameLenFlags = (short)(WORD_FLAG_HIDDEN);
+				nameLenFlags |= name.length();
+				ForthUtils.bufferPutUByte(dict, curPos, nameLenFlags);
+				curPos++;
+				//Store name
+				addString(name);
 		}
 		
 		//Bootstraps dictionary with primitives
@@ -150,7 +180,7 @@ public class ForthDictionary{
 										//Push current instruction pointer to return stack
 										env.pushReturnStack(env.getInstructionPointer());
 										//Set instruction and exec pointers to cur + 4
-										env.setInstructionPointer(env.incExecPointer());
+										env.setInstructionPointer(lastRunWord);
 								}
 						});
 				addPrimitive("EXIT", false, new ForthExecutable(){

@@ -9,14 +9,12 @@ public class Forth{
 		//The next word to execute
 		//  esi in jonesforth
 		private int instructionPointer = 0;
-		//The part of the word that we're currently executing
-		//  eax in jonesforth
-		private int execPointer = 0;
 		private Stack<Integer> returnStack = new Stack<Integer>();
 		private Stack<Integer> dataStack = new Stack<Integer>();
 		public final int STATE_INTERP = 0;
 		public final int STATE_COMPILE = 0;
 		private int state;
+		private ForthInputBuffer in = new ForthInputBuffer();
 
     public void init(){
 				dict.init();
@@ -39,17 +37,6 @@ public class Forth{
 		public void incInstructionPointer(){
 				incInstructionPointer(4);
 		}
-		public int setExecPointer(int val){
-				this.execPointer = val;
-				return this.execPointer;
-		}
-		public int incExecPointer(int amount){
-				this.execPointer += amount;
-				return this.execPointer;
-		}
-		public int incExecPointer(){
-				return incExecPointer(4);
-		}
 
 		/**
 			 Basic stack manipulations
@@ -66,6 +53,9 @@ public class Forth{
 		}
 		public int peekReturnStack(){
 				return this.returnStack.peek();
+		}
+		public boolean isReturnStackEmpty(){
+				return this.returnStack.isEmpty();
 		}
 		public void pushDataStack(int val){
 				this.dataStack.push(val);
@@ -91,35 +81,52 @@ public class Forth{
 				return this.dataStack;
 		}
 
-		public void run(){
-				ForthInputBuffer in = new ForthInputBuffer();
-				while(true){
-						try{
-							System.out.print("> ");
-							in.readLine();
-							String curWord = null;
-							while((curWord = in.getNextWord()) != null){
-									int word = dict.find(curWord);
-									if(word != -1){
-											dict.runWord(word, this);
-									}else{
-											try{
-													//Parse as an int and add to stack
-													int num = Integer.parseInt(curWord);
-													pushDataStack(num);
-											}catch(NumberFormatException ex){
-													throw new ForthException("Word not found: " + curWord);
-											}
-									}
-									//System.out.format("Word: %s -- Found: %d\n", curWord, dict.find(curWord));
-							}
-							System.out.println("ok");
-						}catch(ForthException ex){
-								System.out.println("----Forth Exception ---");
-								ex.printStackTrace();
-								System.out.println("-----------------------");
+		public void doINTERPRET(){
+				try{
+						System.out.print("> ");
+						in.readLine();
+						String curWord = null;
+						while((curWord = in.getNextWord()) != null){
+								int word = dict.find(curWord);
+								if(word != -1){
+										dict.runWord(word, this);
+								}else{
+										try{
+												//Parse as an int and add to stack
+												int num = Integer.parseInt(curWord);
+												pushDataStack(num);
+										}catch(NumberFormatException ex){
+												throw new ForthException("Word not found: " + curWord);
+										}
+								}
+								//System.out.format("Word: %s -- Found: %d\n", curWord, dict.find(curWord));
 						}
+						System.out.println("ok");
+				}catch(ForthException ex){
+						System.out.println("----Forth Exception ---");
+						ex.printStackTrace();
+						System.out.println("-----------------------");
 				}
+		}
+		
+		public void run(){
+				doQUIT();
+		}
+
+		public void doQUIT(){
+				while(true){
+						//clear return stack
+						returnStack.empty();
+						//Interpret next word
+						doINTERPRET();
+				}
+		}
+		
+		public void doNEXT(){
+				// get next addr to execute
+				int toExec = getInstructionPointer();
+				// increment instruction pointer
+				incInstructionPointer();
 		}
 
 		/**
