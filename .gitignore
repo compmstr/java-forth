@@ -1,4 +1,6 @@
 *.jar
 *.class
+.project
+.classpath
 build/*
 dist/*
