@@ -1,20 +1,26 @@
 package com.undi.javaforth;
-import java.io.Console;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.IOException;
 
 public class ForthInputBuffer{
-		private Console input = System.console();
+		private BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
 		private int pos = 0;
 		private String curLine = null;
 
 		public void readLine(){
-			if(input != null){
-				curLine = input.readLine("> ");
-						
-			}else{
-				System.out.println("No console for input");
-				curLine = "3 4 * . bye";
-			}
-			pos = 0;		
+				if(input != null){
+						try{
+								curLine = input.readLine();
+						}catch(IOException ex){
+								ex.printStackTrace();
+								System.exit(1);
+						}
+				}else{
+						System.out.println("No console for input");
+						curLine = "3 4 * . bye";
+				}
+				pos = 0;		
 		}
 
 		private void eatWhitespace(){
