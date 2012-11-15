@@ -12,7 +12,7 @@ public class ForthDictionary{
 		private Vector<ForthExecutable> primitives = new Vector<ForthExecutable>();
 
 		//Index of the start of the last CREATEd word
-		private int lastWord = 0;
+		private int lastWord = -1;
 		//Index where the next insert will go
 		private int curPos = 0;
 
@@ -34,6 +34,16 @@ public class ForthDictionary{
 			 -1 if not found
 		**/
 		public int find(String str){
+				int cur = getLastWord();
+				int curName;
+				do{
+						curName = getWordNameFlagLoc(cur);
+						curName += 1;
+						if(ForthUtils.stringEqualsByteBuffer(dict, curName, str)){
+								return cur;
+						}
+						cur = getPrevWord(cur);
+				}while(cur != -1);
 				return -1;
 		}
 		/**
@@ -101,7 +111,7 @@ public class ForthDictionary{
 				//Store name
 				addString(name);
 				//Store ForthExecutable
-				dict.putInt(primitives.size());
+				dict.putInt(curPos, primitives.size());
 				primitives.add(code);
 				curPos += 4;
 		}
@@ -109,9 +119,34 @@ public class ForthDictionary{
 		//Bootstraps dictionary with primitives
 		public void init(){
 				addPrimitive("DOCOL", false, new ForthExecutable(){
-								public void Execute(Forth Env){
+								public void Execute(Forth env){
 										System.out.println("DOCOL");
+										//Push current instruction pointer to return stack
+										env.pushReturnStack(env.getInstructionPointer());
+										//Set instruction and exec pointers to cur + 4
+										env.setInstructionPointer(env.incExecPointer());
 								}
 						});
+				System.out.format("lastWord: %d\n", lastWord);
+				System.out.format("prevWord: %d\n", getPrevWord(lastWord));
+				addPrimitive("*", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										System.out.println("*");
+										env.pushDataStack(env.popDataStack() *
+																			env.popDataStack());
+								}
+						});
+				System.out.format("lastWord: %d\n", lastWord);
+				System.out.format("prevWord: %d\n", getPrevWord(lastWord));
+				addPrimitive("+", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										System.out.println("+");
+										env.pushDataStack(env.popDataStack() +
+																			env.popDataStack());
+								}
+						});
+
+				System.out.format("lastWord: %d\n", lastWord);
+				System.out.format("prevWord: %d\n", getPrevWord(lastWord));
 		}
 }

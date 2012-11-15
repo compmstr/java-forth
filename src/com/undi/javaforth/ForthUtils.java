@@ -7,7 +7,8 @@ public class ForthUtils{
 			 to bytes byte boundries
 		**/
 		public static int alignBytes(int bytes, int val){
-				return (bytes - (val % bytes));
+				System.out.format("AlignBytes: %d, %d --> %d\n", bytes, val, ((bytes - (val % bytes)) % (bytes - 1)));
+				return ((bytes - (val % bytes)) % bytes);
 		}
 		public static int alignDWord(int val){
 				return alignBytes(4, val);
