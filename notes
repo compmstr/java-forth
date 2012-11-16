@@ -1,3 +1,11 @@
+Need nextInstruction and curInstruction pointer
+Main loop executes word at curInstruction pointer(jmp pointer)
+	primitive words will increment it after,
+	compound words will pop the return stack into it after
+Start the system off by calling QUIT
+	Simple, interpret, then branch back
+Branch will set both nextInstruction and curInstruction back
+
 Instruction pointer -> indexes in dictionary array
 Dictionary array -> ints, indexes in Execution token array / literal values
 Execution token array -> ForthExecutables
