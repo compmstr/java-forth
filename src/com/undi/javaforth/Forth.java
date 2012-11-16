@@ -106,7 +106,7 @@ public class Forth{
 												if(dict.isWordImmediate(word)){
 														dict.runWord(word, this);
 												}else{
-														dict.compileWord(word, this);
+														dict.compileWord(word);
 												}
 										}
 								}else{

@@ -28,7 +28,7 @@ public class ForthDictionary{
 				return this.lastWord;
 		}
 		public void compileInt(final int val){
-				dict.putInt(curPos);
+				dict.putInt(curPos, val);
 				curPos += 4;
 		}
 		/**
@@ -133,6 +133,11 @@ public class ForthDictionary{
 				lenFlags &= ~flags;
 				ForthUtils.bufferPutUByte(dict, getWordNameFlagLoc(word), lenFlags);
 		}
+		private void toggleWordFlags(int word, short flags){
+				short lenFlags = getWordNameFlag(word);
+				lenFlags ^= flags;
+				ForthUtils.bufferPutUByte(dict, getWordNameFlagLoc(word), lenFlags);
+		}
 
 		/**
 			 pass in a location in the dictionary, return the ForthExecutable primitive
@@ -156,7 +161,15 @@ public class ForthDictionary{
 				}
 		}
 
-		public void compileWord(int word, Forth env){
+		public void compileNamedWord(String word){
+				int wordNum = find(word);
+				if(wordNum != -1){
+						compileWord(wordNum);
+				}else{
+						throw new ForthException("Word not found: " + word);
+				}
+		}
+		public void compileWord(int word){
 				compileInt(word);
 		}
 
@@ -414,6 +427,29 @@ public class ForthDictionary{
 								}
 						});
 				
+				//Flag manipulators
+				addPrimitive("hidden", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										toggleWordFlags(env.popDataStack(), WORD_FLAG_HIDDEN);
+								}
+						});
+				addPrimitive("immediate", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										toggleWordFlags(env.popDataStack(), WORD_FLAG_IMMEDIATE);
+								}
+						});
+
+				//Constants
+				addPrimitive("lastxt", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										env.pushDataStack(lastWord);
+								}
+						});
+				addPrimitive("here", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										env.pushDataStack(curPos);
+								}
+						});
 
 				//Misc
 				addPrimitive("bye", false, new ForthExecutable(){
