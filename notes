@@ -1,3 +1,9 @@
+while
+  run current instruction
+    this may update where the current instruction points
+  if curinstruction not modified... (if we jump, we don't want to skip anything)
+    increment current instruction
+
 TODO: fix interpret to work with curInstruction pointer
 Need nextInstruction and curInstruction pointer
 Main loop executes word at curInstruction pointer(jmp pointer)
@@ -19,7 +25,7 @@ ForthInterp - singleton
     Entries:
       Prev(int) -> index in dictionary of prev entry
       flags/len:
-        2 bits:
+        3 bits:
           immed -- immediate word [& 0x80]
           hidden -- hidden (not-findable) word [& 0x40]
           primitive -- built-in word? [& 0x20]

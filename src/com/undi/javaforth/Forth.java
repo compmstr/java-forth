@@ -151,11 +151,9 @@ public class Forth{
 				}
 		}
 
-		public void doQUIT(){
+		public void emptyReturnStack(){
 				//clear return stack
 				returnStack.empty();
-				//Interpret next word
-				doINTERPRET();
 		}
 		
 		public void doNEXT(){
@@ -171,6 +169,7 @@ public class Forth{
 		public void addCompoundPrims(){
 				dict.doCreate("QUIT");
 				dict.compileNamedWord("(QUIT)");
+				dict.compileNamedWord("INTERPRET");
 				dict.compileNamedWord("BRANCH");
 				dict.compileInt(-8);
 				dict.wordHidden(dict.getLastWord());

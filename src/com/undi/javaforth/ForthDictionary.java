@@ -516,7 +516,7 @@ public class ForthDictionary{
 						});
 				addPrimitive("(QUIT)", false, new ForthExecutable(){
 								public void Execute(Forth env){
-										env.doQUIT();
+										env.emptyReturnStack();
 								}
 						});
 				addPrimitive("bye", false, new ForthExecutable(){
