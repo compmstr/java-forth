@@ -31,6 +31,15 @@ public class ForthDictionary{
 				dict.putInt(curPos, val);
 				curPos += 4;
 		}
+		public String getWordName(int word){
+				int nameLoc = getWordNameFlagLoc(word) + 1;
+				int nameSize = getWordNameLen(word);
+				StringBuilder str = new StringBuilder();
+				for(int i = 0; i < nameSize; i++){
+						str.append((char)(ForthUtils.bufferGetUByte(dict, nameLoc + i)));
+				}
+				return str.toString();
+		}
 		/**
 			 Returns the word with the name str
 			 -1 if not found
@@ -138,6 +147,15 @@ public class ForthDictionary{
 				lenFlags ^= flags;
 				ForthUtils.bufferPutUByte(dict, getWordNameFlagLoc(word), lenFlags);
 		}
+		/**
+			 toggles the hidden state of the passed in word
+		**/
+		public void wordHidden(int word){
+				toggleWordFlags(word, WORD_FLAG_HIDDEN);
+		}
+		public void wordImmediate(int word){
+				toggleWordFlags(word, WORD_FLAG_IMMEDIATE);
+		}
 
 		/**
 			 pass in a location in the dictionary, return the ForthExecutable primitive
@@ -153,11 +171,7 @@ public class ForthDictionary{
 						runPrimitive(dict.getInt(getCodeWord(word)), env);
 				}else{
 						//Run a composite word
-						//Since the first word of a composite word is docol,
-						//  the stack will have stuff in it until the EXIT
-						do{
-
-						}while(!env.isReturnStackEmpty());
+						env.setInstructionPtr(dict.getInt(getCodeWord(word)));
 				}
 		}
 
@@ -195,23 +209,24 @@ public class ForthDictionary{
 				addPrimitive("DOCOL", false, new ForthExecutable(){
 								public void Execute(Forth env){
 										//Push current instruction pointer to return stack
-										env.pushReturnStack(env.getInstructionPointer());
+										env.pushReturnStack(env.getNextInstructionPtr());
 										//Set instruction and exec pointers to cur + 4
-										env.setInstructionPointer(lastRunWord);
+										env.setNextInstructionPtr(lastRunWord + 4);
+										env.setInstructionPtr(env.getNextInstructionPtr());
 								}
 						});
 				addPrimitive("EXIT", false, new ForthExecutable(){
 								public void Execute(Forth env){
 										//Pop the return stack into the instruction pointer
-										env.setInstructionPointer(env.popReturnStack());
+										env.setNextInstructionPtr(env.popReturnStack());
 								}
 						});
 				addPrimitive("LIT", false, new ForthExecutable(){
 								public void Execute(Forth env){
 										//Get the next thing in the list, push it onto data stack
-										env.pushDataStack(dict.getInt(env.getInstructionPointer()));
+										env.pushDataStack(dict.getInt(env.getNextInstructionPtr()));
 										//Move instruction pointer past next item
-										env.incInstructionPointer();
+										env.incNextInstructionPtr();
 								}
 						});
 				addPrimitive("create", false, new ForthExecutable(){
@@ -430,19 +445,31 @@ public class ForthDictionary{
 				//Flag manipulators
 				addPrimitive("hidden", false, new ForthExecutable(){
 								public void Execute(Forth env){
-										toggleWordFlags(env.popDataStack(), WORD_FLAG_HIDDEN);
+										wordHidden(env.popDataStack());
 								}
 						});
 				addPrimitive("immediate", false, new ForthExecutable(){
 								public void Execute(Forth env){
-										toggleWordFlags(env.popDataStack(), WORD_FLAG_IMMEDIATE);
+										wordImmediate(env.popDataStack());
+								}
+						});
+
+				//Memory access
+				addPrimitive("@", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										env.pushDataStack(dict.getInt(env.popDataStack()));
+								}
+						});
+				addPrimitive("!", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										dict.putInt(env.popDataStack(), env.popDataStack());
 								}
 						});
 
 				//Constants
 				addPrimitive("lastxt", false, new ForthExecutable(){
 								public void Execute(Forth env){
-										env.pushDataStack(lastWord);
+										env.pushDataStack(getCodeWord(lastWord));
 								}
 						});
 				addPrimitive("here", false, new ForthExecutable(){
@@ -451,7 +478,47 @@ public class ForthDictionary{
 								}
 						});
 
+				//Branching
+				addPrimitive("BRANCH", true, new ForthExecutable(){
+								public void Execute(Forth env){
+										//Get the next thing in the list, and add it to the instruction pointer
+										env.incNextInstructionPtr(dict.getInt(env.getNextInstructionPtr()));
+								}
+						});
+				addPrimitive("0BRANCH", true, new ForthExecutable(){
+								public void Execute(Forth env){
+										if(env.popDataStack() == 0){
+												//Get the next thing in the list, and add it to the instruction pointer
+												env.incNextInstructionPtr(dict.getInt(env.getNextInstructionPtr()));
+										}else{
+												//just skip the branch amount
+												env.incNextInstructionPtr();
+										}
+								}
+						});
+
 				//Misc
+				addPrimitive("'", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										String word = env.getNextWord();
+										int xt = find(word);
+										if(xt == -1){
+												throw new ForthException("Word - " + word + " - not found\n");
+										}else{
+												env.pushDataStack(getCodeWord(xt));
+										}
+								}
+						});
+				addPrimitive("INTERPRET", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										env.doINTERPRET();
+								}
+						});
+				addPrimitive("(QUIT)", false, new ForthExecutable(){
+								public void Execute(Forth env){
+										env.doQUIT();
+								}
+						});
 				addPrimitive("bye", false, new ForthExecutable(){
 								public void Execute(Forth env){
 										System.out.println("Bye!");

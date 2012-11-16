@@ -8,7 +8,9 @@ public class Forth{
 		private ForthDictionary dict = new ForthDictionary();
 		//The next word to execute
 		//  esi in jonesforth
-		private int instructionPointer = 0;
+		private int nextInstructionPtr = 0;
+		//Current word to execute
+		private int instructionPtr = 0;
 		private Stack<Integer> returnStack = new Stack<Integer>();
 		private Stack<Integer> dataStack = new Stack<Integer>();
 		public static final int STATE_INTERP = 0;
@@ -18,6 +20,7 @@ public class Forth{
 
     public void init(){
 				dict.init();
+				addCompoundPrims();
 				//System.out.println(dict.find("DOCOL"));
 				//System.out.println(dict.find("bye"));
     }
@@ -36,17 +39,23 @@ public class Forth{
 		/**
 			 Instruction pointer stuff
 		**/
-		public int getInstructionPointer(){
-				return this.instructionPointer;
+		public int getNextInstructionPtr(){
+				return this.nextInstructionPtr;
 		}
-		public void setInstructionPointer(int val){
-				this.instructionPointer = val;
+		public void setNextInstructionPtr(int val){
+				this.nextInstructionPtr = val;
 		}
-		public void incInstructionPointer(int amount){
-				this.instructionPointer += amount;
+		public void incNextInstructionPtr(int amount){
+				this.nextInstructionPtr += amount;
 		}
-		public void incInstructionPointer(){
-				incInstructionPointer(4);
+		public void incNextInstructionPtr(){
+				incNextInstructionPtr(4);
+		}
+		public int getInstructionPtr(){
+				return this.instructionPtr;
+		}
+		public void setInstructionPtr(int val){
+				this.instructionPtr = val;
 		}
 
 		/**
@@ -116,6 +125,7 @@ public class Forth{
 												if(state == STATE_INTERP){
 														pushDataStack(num);
 												}else{
+														dict.compileNamedWord("LIT");
 														dict.compileInt(num);
 												}
 										}catch(NumberFormatException ex){
@@ -133,23 +143,37 @@ public class Forth{
 		}
 		
 		public void run(){
-				doQUIT();
+				//Set the start to QUIT
+				instructionPtr = dict.find("QUIT");
+				nextInstructionPtr = instructionPtr;
+				while(true){
+						dict.runWord(instructionPtr, this);
+				}
 		}
 
 		public void doQUIT(){
-				while(true){
-						//clear return stack
-						returnStack.empty();
-						//Interpret next word
-						doINTERPRET();
-				}
+				//clear return stack
+				returnStack.empty();
+				//Interpret next word
+				doINTERPRET();
 		}
 		
 		public void doNEXT(){
 				// get next addr to execute
-				int toExec = getInstructionPointer();
+				instructionPtr = getNextInstructionPtr();
 				// increment instruction pointer
-				incInstructionPointer();
+				incNextInstructionPtr();
+		}
+
+		/**
+			 Adds compound built-in words
+		**/
+		public void addCompoundPrims(){
+				dict.doCreate("QUIT");
+				dict.compileNamedWord("(QUIT)");
+				dict.compileNamedWord("BRANCH");
+				dict.compileInt(-8);
+				dict.wordHidden(dict.getLastWord());
 		}
 
 		/**

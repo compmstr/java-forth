@@ -1,3 +1,4 @@
+TODO: fix interpret to work with curInstruction pointer
 Need nextInstruction and curInstruction pointer
 Main loop executes word at curInstruction pointer(jmp pointer)
 	primitive words will increment it after,
