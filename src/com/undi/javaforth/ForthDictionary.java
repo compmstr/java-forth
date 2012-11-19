@@ -14,9 +14,10 @@ public class ForthDictionary{
 		private int lastRunWord = 0;
 
 		//Index of the start of the last CREATEd word
-		private int lastWord = -1;
+		private int lastWord = 0;
 		//Index where the next insert will go (HERE)
-		private int curPos = 0;
+		// 0 is for null pointers, unused
+		private int curPos = 1;
 
 		/**
 			 aligns the dictionary to 32-bits (4 bytes)
@@ -58,7 +59,7 @@ public class ForthDictionary{
 							}
 						}
 						cur = getPrevWord(cur);
-				}while(cur != -1);
+				}while(cur != 0);
 				return -1;
 		}
 		/**
